@@ -28,6 +28,9 @@ export function buildMarkdownReport(report: AnalysisResponse): string {
       if (issue.detail) {
         lines.push(`- **Detail:** ${issue.detail}`)
       }
+      if (issue.evidence) {
+        lines.push(`- **Evidence:** ${issue.evidence}`)
+      }
       lines.push('')
     }
   }

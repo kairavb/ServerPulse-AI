@@ -55,6 +55,9 @@ def _map_payload(payload: dict[str, Any]) -> AnalysisResponse:
     health_score = _require_int(payload, "health_score", minimum=0, maximum=100)
     severity = _normalize_severity(payload.get("severity"))
     summary = _require_str(payload, "summary")
+    limitations = _optional_str(payload.get("limitations"))
+    if limitations:
+        summary = f"{summary}\n\nAnalysis limitations: {limitations}"
     issues = _parse_issues(payload.get("issues", []))
     recommendations = _parse_string_list(payload.get("recommendations", []))
 
@@ -90,6 +93,7 @@ def _parse_issues(raw_issues: Any) -> list[Issue]:
                 severity=_normalize_severity(item.get("severity", "Medium")),
                 source=_optional_str(item.get("source")),
                 detail=_optional_str(item.get("detail") or item.get("description")),
+                evidence=_optional_str(item.get("evidence")),
             )
         )
 
@@ -107,7 +111,12 @@ def _normalize_severity(value: Any) -> str:
         return "Medium"
 
     normalized = str(value).strip().lower()
-    mapping = {"high": "High", "medium": "Medium", "low": "Low"}
+    mapping = {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "critical": "Critical",
+    }
     if normalized not in mapping:
         raise ParseError(f"Invalid severity value: {value!r}")
     return mapping[normalized]

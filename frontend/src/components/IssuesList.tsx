@@ -30,6 +30,11 @@ export function IssuesList({ issues }: IssuesListProps) {
               {issue.detail && (
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">{issue.detail}</p>
               )}
+              {issue.evidence && (
+                <p className="mt-2 rounded-md bg-white px-3 py-2 font-mono text-xs text-slate-600 ring-1 ring-slate-200">
+                  Evidence: {issue.evidence}
+                </p>
+              )}
             </li>
           ))}
         </ul>

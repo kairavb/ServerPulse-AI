@@ -10,29 +10,11 @@ from typing import Any
 from rocketride import RocketRideClient
 from rocketride.schema import Question
 
+from app.prompts.log_analysis import ANALYSIS_SYSTEM_PROMPT, ANALYSIS_USER_QUESTION
 from app.models.analysis import AnalysisResponse
 from app.services.llm_parser import ParseError, parse_analysis_response
 
 logger = logging.getLogger(__name__)
-
-ANALYSIS_INSTRUCTION = """You are a Linux server health analyst.
-Review the provided logs and system snapshots.
-Return ONLY a JSON object with this exact shape:
-{
-  "health_score": <integer 0-100>,
-  "severity": "High" | "Medium" | "Low",
-  "summary": "<one paragraph explaining overall health and likely root cause>",
-  "issues": [
-    {
-      "title": "<short issue title>",
-      "severity": "High" | "Medium" | "Low",
-      "source": "<log source such as nginx, docker, pm2, disk, memory, systemd>",
-      "detail": "<brief explanation>"
-    }
-  ],
-  "recommendations": ["<actionable fix>", "..."]
-}
-Do not include markdown fences or commentary outside the JSON object."""
 
 
 class AnalysisServiceError(Exception):
@@ -101,11 +83,9 @@ async def _execute_pipeline(log_prompt: str, pipeline_path: Path) -> AnalysisRes
 
 def _build_question(log_prompt: str) -> Question:
     question = Question(expectJson=True)
-    question.addInstruction("Role", ANALYSIS_INSTRUCTION)
+    question.addInstruction("Role", ANALYSIS_SYSTEM_PROMPT)
     question.addContext(log_prompt)
-    question.addQuestion(
-        "Analyze these server logs and return the structured health report JSON."
-    )
+    question.addQuestion(ANALYSIS_USER_QUESTION)
     return question
 
 
