@@ -23,10 +23,7 @@ docker rm -f "$NAME" 2>/dev/null || true
 echo "Starting $NAME (first boot may take 1–2 minutes)..."
 docker run -d --name "$NAME" -p 5565:5565 \
   -v "$DATA_DIR:/opt/data" \
-  -v "$ROOT/backend/pipeline:/pipeline:ro" \
-  --entrypoint ./engine \
-  "$IMAGE" \
-  --node_path=/pipeline ./ai/eaas.py --host=0.0.0.0
+  "$IMAGE"
 
 echo "Waiting for RocketRide to be ready..."
 for _ in $(seq 1 40); do

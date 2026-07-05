@@ -17,239 +17,18 @@
 			}
 		},
 		{
-			"id": "categorize_logs_prompt",
-			"provider": "prompt",
+			"id": "analyze_logs",
+			"provider": "llm_gemini",
 			"config": {
-				"instructions": [
-					"You are Categorize Logs. Read every labeled log section in the user context. Do not invent data. Return ONLY valid JSON (no markdown fences) with this shape: {\"stage\":\"categorizer\",\"categories\":{\"memory\":[],\"disk\":[],\"networking\":[],\"docker\":[],\"services\":[],\"security\":[]}}. Each observation object: {\"observation\":\"...\",\"source\":\"filename\",\"evidence\":\"log quote or null\"}. Use empty arrays when a category has no findings."
-				],
+				"profile": "gemini-2_5-flash",
+				"gemini-2_5-flash": {
+					"apikey": "${ROCKETRIDE_GEMINI_KEY}"
+				},
 				"parameters": {}
 			},
 			"input": [{ "lane": "questions", "from": "upload_logs" }],
 			"ui": {
-				"position": { "x": 200, "y": 200 },
-				"measured": { "width": 150, "height": 66 },
-				"nodeType": "default",
-				"formDataValid": true
-			}
-		},
-		{
-			"id": "categorize_logs",
-			"provider": "llm_gemini",
-			"config": {
-				"profile": "gemini-2_5-flash",
-				"gemini-2_5-flash": {
-					"apikey": "${ROCKETRIDE_GEMINI_KEY}"
-				},
-				"parameters": {}
-			},
-			"input": [{ "lane": "questions", "from": "categorize_logs_prompt" }],
-			"ui": {
-				"position": { "x": 380, "y": 200 },
-				"measured": { "width": 150, "height": 66 },
-				"nodeType": "default",
-				"formDataValid": true
-			}
-		},
-		{
-			"id": "categorize_logs_pass",
-			"provider": "answer_to_text",
-			"config": {
-				"profile": "default",
-				"default": {},
-				"parameters": {}
-			},
-			"input": [{ "lane": "answers", "from": "categorize_logs" }],
-			"ui": {
-				"position": { "x": 560, "y": 200 },
-				"measured": { "width": 150, "height": 66 },
-				"nodeType": "default",
-				"formDataValid": true
-			}
-		},
-		{
-			"id": "extract_issues_prompt",
-			"provider": "prompt",
-			"config": {
-				"instructions": [
-					"You are Extract Issues. The categorizer JSON from Categorize Logs is in the context below. Return ONLY valid JSON: {\"stage\":\"extractor\",\"issues\":[{\"title\":\"...\",\"severity\":\"Low|Medium|High|Critical\",\"category\":\"failure|security|performance|storage|networking|other\",\"source\":\"...\",\"detail\":\"...\",\"evidence\":\"...\"}]}. Base every issue on evidence from the categorizer output. Use an empty issues array if none."
-				],
-				"parameters": {}
-			},
-			"input": [{ "lane": "text", "from": "categorize_logs_pass" }],
-			"ui": {
-				"position": { "x": 740, "y": 200 },
-				"measured": { "width": 150, "height": 66 },
-				"nodeType": "default",
-				"formDataValid": true
-			}
-		},
-		{
-			"id": "extract_issues",
-			"provider": "llm_gemini",
-			"config": {
-				"profile": "gemini-2_5-flash",
-				"gemini-2_5-flash": {
-					"apikey": "${ROCKETRIDE_GEMINI_KEY}"
-				},
-				"parameters": {}
-			},
-			"input": [{ "lane": "questions", "from": "extract_issues_prompt" }],
-			"ui": {
-				"position": { "x": 920, "y": 200 },
-				"measured": { "width": 150, "height": 66 },
-				"nodeType": "default",
-				"formDataValid": true
-			}
-		},
-		{
-			"id": "extract_issues_pass",
-			"provider": "answer_to_text",
-			"config": {
-				"profile": "default",
-				"default": {},
-				"parameters": {}
-			},
-			"input": [{ "lane": "answers", "from": "extract_issues" }],
-			"ui": {
-				"position": { "x": 1100, "y": 200 },
-				"measured": { "width": 150, "height": 66 },
-				"nodeType": "default",
-				"formDataValid": true
-			}
-		},
-		{
-			"id": "correlate_findings_prompt",
-			"provider": "prompt",
-			"config": {
-				"instructions": [
-					"You are Correlate Findings. Prior stage JSON is in the context below. Correlate related findings across sources (e.g. OOM + PM2 restart + nginx 502). Return ONLY valid JSON: {\"stage\":\"correlator\",\"summary\":\"2-3 sentences\",\"root_cause\":\"... or null\",\"impact\":\"... or null\",\"confidence\":\"Low|Medium|High\",\"confidence_reason\":\"one sentence\",\"causal_chain\":[{\"time\":\"YYYY-MM-DD HH:MM:SS or —\",\"event\":\"...\",\"source\":\"...\"}],\"suggested_logs\":[\"...\"]}. Use suggested_logs only when confidence is Medium or Low; otherwise []."
-				],
-				"parameters": {}
-			},
-			"input": [{ "lane": "text", "from": "extract_issues_pass" }],
-			"ui": {
-				"position": { "x": 1280, "y": 200 },
-				"measured": { "width": 150, "height": 66 },
-				"nodeType": "default",
-				"formDataValid": true
-			}
-		},
-		{
-			"id": "correlate_findings",
-			"provider": "llm_gemini",
-			"config": {
-				"profile": "gemini-2_5-flash",
-				"gemini-2_5-flash": {
-					"apikey": "${ROCKETRIDE_GEMINI_KEY}"
-				},
-				"parameters": {}
-			},
-			"input": [{ "lane": "questions", "from": "correlate_findings_prompt" }],
-			"ui": {
-				"position": { "x": 1460, "y": 200 },
-				"measured": { "width": 150, "height": 66 },
-				"nodeType": "default",
-				"formDataValid": true
-			}
-		},
-		{
-			"id": "correlate_findings_pass",
-			"provider": "answer_to_text",
-			"config": {
-				"profile": "default",
-				"default": {},
-				"parameters": {}
-			},
-			"input": [{ "lane": "answers", "from": "correlate_findings" }],
-			"ui": {
-				"position": { "x": 1640, "y": 200 },
-				"measured": { "width": 150, "height": 66 },
-				"nodeType": "default",
-				"formDataValid": true
-			}
-		},
-		{
-			"id": "generate_recommendations_prompt",
-			"provider": "prompt",
-			"config": {
-				"instructions": [
-					"You are Generate Recommendations. Prior analysis JSON is in the context below. Return ONLY valid JSON: {\"stage\":\"recommender\",\"recommendations\":[{\"action\":\"specific fix\",\"command\":\"shell command or null\"}],\"timeline\":[{\"time\":\"YYYY-MM-DD HH:MM:SS or —\",\"title\":\"...\",\"source\":\"...\",\"detail\":\"...\"}],\"timeline_summary\":\"short narrative or null\"}. Add command hints when a concrete Linux command applies."
-				],
-				"parameters": {}
-			},
-			"input": [{ "lane": "text", "from": "correlate_findings_pass" }],
-			"ui": {
-				"position": { "x": 1820, "y": 200 },
-				"measured": { "width": 150, "height": 66 },
-				"nodeType": "default",
-				"formDataValid": true
-			}
-		},
-		{
-			"id": "generate_recommendations",
-			"provider": "llm_gemini",
-			"config": {
-				"profile": "gemini-2_5-flash",
-				"gemini-2_5-flash": {
-					"apikey": "${ROCKETRIDE_GEMINI_KEY}"
-				},
-				"parameters": {}
-			},
-			"input": [{ "lane": "questions", "from": "generate_recommendations_prompt" }],
-			"ui": {
-				"position": { "x": 2000, "y": 200 },
-				"measured": { "width": 150, "height": 66 },
-				"nodeType": "default",
-				"formDataValid": true
-			}
-		},
-		{
-			"id": "generate_recommendations_pass",
-			"provider": "answer_to_text",
-			"config": {
-				"profile": "default",
-				"default": {},
-				"parameters": {}
-			},
-			"input": [{ "lane": "answers", "from": "generate_recommendations" }],
-			"ui": {
-				"position": { "x": 2180, "y": 200 },
-				"measured": { "width": 150, "height": 66 },
-				"nodeType": "default",
-				"formDataValid": true
-			}
-		},
-		{
-			"id": "format_incident_report_prompt",
-			"provider": "prompt",
-			"config": {
-				"instructions": [
-					"You are Format Incident Report. All prior stage outputs are in the context below. Produce the final API JSON ONLY (no markdown fences): {\"health_score\":0-100,\"severity\":\"Low|Medium|High|Critical\",\"summary\":\"2-4 sentences\",\"impact\":\"... or null\",\"root_cause\":\"... or null\",\"risk_scores\":{\"availability\":0-100,\"security\":0-100,\"storage\":0-100,\"memory\":0-100,\"networking\":0-100},\"timeline\":[...],\"timeline_summary\":\"... or null\",\"confidence\":\"Low|Medium|High\",\"confidence_reason\":\"one sentence\",\"suggested_logs\":[],\"issues\":[{\"title\":\"...\",\"severity\":\"Low|Medium|High|Critical\",\"source\":\"...\",\"detail\":\"...\",\"evidence\":\"...\"}],\"recommendations\":[{\"action\":\"...\",\"command\":\"... or null\"}]}. Higher risk_scores mean greater risk. Map confidence and suggested_logs from prior stages."
-				],
-				"parameters": {}
-			},
-			"input": [{ "lane": "text", "from": "generate_recommendations_pass" }],
-			"ui": {
-				"position": { "x": 2360, "y": 200 },
-				"measured": { "width": 150, "height": 66 },
-				"nodeType": "default",
-				"formDataValid": true
-			}
-		},
-		{
-			"id": "format_incident_report",
-			"provider": "llm_gemini",
-			"config": {
-				"profile": "gemini-2_5-flash",
-				"gemini-2_5-flash": {
-					"apikey": "${ROCKETRIDE_GEMINI_KEY}"
-				},
-				"parameters": {}
-			},
-			"input": [{ "lane": "questions", "from": "format_incident_report_prompt" }],
-			"ui": {
-				"position": { "x": 2540, "y": 200 },
+				"position": { "x": 220, "y": 200 },
 				"measured": { "width": 150, "height": 66 },
 				"nodeType": "default",
 				"formDataValid": true
@@ -262,9 +41,9 @@
 				"laneName": "answers",
 				"parameters": {}
 			},
-			"input": [{ "lane": "answers", "from": "format_incident_report" }],
+			"input": [{ "lane": "answers", "from": "analyze_logs" }],
 			"ui": {
-				"position": { "x": 2720, "y": 200 },
+				"position": { "x": 420, "y": 200 },
 				"measured": { "width": 150, "height": 66 },
 				"nodeType": "default",
 				"formDataValid": true
@@ -273,6 +52,6 @@
 	],
 	"source": "upload_logs",
 	"project_id": "75e8c175-858f-4ef5-9d28-15303e115033",
-	"viewport": { "x": 0, "y": 0, "zoom": 0.6 },
+	"viewport": { "x": 0, "y": 0, "zoom": 0.8 },
 	"version": 1
 }

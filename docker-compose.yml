@@ -6,13 +6,6 @@ services:
     volumes:
       # Reuse the same bootstrap data as ./scripts/start-rocketride.sh
       - ./.data/rocketride:/opt/data
-      # Local lane bridge node (answers → text) for multi-stage LLM chaining
-      - ./backend/pipeline:/pipeline:ro
-    entrypoint:
-      - ./engine
-      - --node_path=/pipeline
-      - ./ai/eaas.py
-      - --host=0.0.0.0
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -25,10 +18,11 @@ services:
     env_file:
       - path: .env
         required: false
+      - path: backend/.env
+        required: false
     environment:
       ROCKETRIDE_URI: http://rocketride:5565
       ROCKETRIDE_APIKEY: ${ROCKETRIDE_APIKEY:-MYAPIKEY}
-      ROCKETRIDE_GEMINI_KEY: ${ROCKETRIDE_GEMINI_KEY:-}
       CORS_ORIGINS: http://localhost:3000,http://localhost:5173
     depends_on:
       - rocketride
