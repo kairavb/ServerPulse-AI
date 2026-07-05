@@ -9,13 +9,29 @@ from fastapi import UploadFile
 # Basenames we accept from the upload UI or ZIP extraction.
 SUPPORTED_LOG_NAMES: frozenset[str] = frozenset(
     {
+        # Logs
         "journal.log",
         "nginx-error.log",
+        "nginx-access.log",
         "docker.log",
         "pm2.log",
+        "syslog.log",
+        "auth.log",
+        "kern.log",
+        "ufw.log",
+        # Snapshots
         "free.txt",
         "df.txt",
         "systemctl.txt",
+        "top.txt",
+        "ss.txt",
+        "uptime.txt",
+        "iostat.txt",
+        # Config files
+        "nginx.conf",
+        "docker-compose.yml",
+        "ecosystem.config.js",
+        "pm2.config.json",
     }
 )
 
@@ -23,11 +39,24 @@ SUPPORTED_LOG_NAMES: frozenset[str] = frozenset(
 LOG_LABELS: dict[str, str] = {
     "journal.log": "System Journal (journalctl)",
     "nginx-error.log": "Nginx Error Log",
+    "nginx-access.log": "Nginx Access Log",
     "docker.log": "Docker Log",
     "pm2.log": "PM2 Process Manager Log",
+    "syslog.log": "Syslog",
+    "auth.log": "Authentication Log",
+    "kern.log": "Kernel Log",
+    "ufw.log": "UFW Firewall Log",
     "free.txt": "Memory Usage (free)",
     "df.txt": "Disk Usage (df)",
     "systemctl.txt": "Systemd Services (systemctl)",
+    "top.txt": "Process Snapshot (top)",
+    "ss.txt": "Network Sockets (ss)",
+    "uptime.txt": "System Uptime",
+    "iostat.txt": "Disk I/O (iostat)",
+    "nginx.conf": "Nginx Configuration",
+    "docker-compose.yml": "Docker Compose Configuration",
+    "ecosystem.config.js": "PM2 Ecosystem Configuration",
+    "pm2.config.json": "PM2 Configuration (JSON)",
 }
 
 # Per-file cap so one huge file cannot dominate the LLM context.
@@ -116,6 +145,14 @@ def build_analysis_prompt(logs: list[LogFile]) -> str:
         )
 
     return "\n".join(sections).strip()
+
+
+def format_uploaded_log_labels(logs: list[LogFile]) -> list[str]:
+    """Human-readable labels for logs included in the analysis."""
+    return [
+        f"{LOG_LABELS.get(log.name, log.name)} ({log.name})"
+        for log in sorted(logs, key=lambda item: item.name)
+    ]
 
 
 def _basename(filename: str | None) -> str:

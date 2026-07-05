@@ -1,5 +1,6 @@
 """API route tests with mocked RocketRide execution."""
 
+from datetime import datetime, timezone
 from io import BytesIO
 from unittest.mock import AsyncMock, patch
 
@@ -7,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.models.analysis import AnalysisResponse, Issue
+from app.models.analysis import AnalysisResponse, Issue, Recommendation
 
 
 @pytest.fixture
@@ -29,7 +30,11 @@ def test_analyze_returns_structured_report(client: TestClient) -> None:
                 source="nginx",
             )
         ],
-        recommendations=["Restart the PM2 process"],
+        recommendations=[
+            Recommendation(action="Restart the PM2 process", command="pm2 restart all")
+        ],
+        uploaded_logs=["Nginx Error Log (nginx-error.log)"],
+        generated_at=datetime(2026, 7, 3, 10, 0, 0, tzinfo=timezone.utc),
     )
 
     with patch(
@@ -46,6 +51,8 @@ def test_analyze_returns_structured_report(client: TestClient) -> None:
     assert body["health_score"] == 82
     assert body["severity"] == "Medium"
     assert body["issues"][0]["title"] == "nginx returning 502"
+    assert body["uploaded_logs"] == ["Nginx Error Log (nginx-error.log)"]
+    assert body["generated_at"] is not None
 
 
 def test_analyze_rejects_unsupported_file(client: TestClient) -> None:

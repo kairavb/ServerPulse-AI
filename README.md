@@ -34,7 +34,11 @@ RocketRide credentials (`ROCKETRIDE_URI`, `ROCKETRIDE_APIKEY`) and the Gemini ke
 
 ---
 
+
+
 ## Quick Start
+
+
 
 ### Prerequisites
 
@@ -42,14 +46,31 @@ RocketRide credentials (`ROCKETRIDE_URI`, `ROCKETRIDE_APIKEY`) and the Gemini ke
 - [RocketRide engine](https://github.com/rocketride-org/rocketride-server) running (default `http://localhost:5565`)
 - Gemini API key
 
+
+
 ### 1. RocketRide engine
 
+From the **repo root**, run:
+
 ```bash
-docker pull ghcr.io/rocketride-org/rocketride-engine:latest
-docker run --name rocketride-engine -p 5565:5565 ghcr.io/rocketride-org/rocketride-engine:latest
+./scripts/start-rocketride.sh
 ```
 
-Or use the RocketRide VS Code extension to start a local server.
+This stops any old container on port 5565 (including runs without a data volume), mounts `.data/rocketride` → `/opt/data`, and waits until the engine is ready.
+
+Or manually:
+
+```bash
+mkdir -p .data/rocketride && chmod 777 .data/rocketride
+docker rm -f rocketride-engine
+docker run -d --name rocketride-engine -p 5565:5565 \
+  -v "$(pwd)/.data/rocketride:/opt/data" \
+  ghcr.io/rocketride-org/rocketride-engine:latest
+```
+
+Set `ROCKETRIDE_APIKEY=MYAPIKEY` in `backend/.env` (default dev key for the local engine).
+
+
 
 ### 2. Backend
 
@@ -57,7 +78,7 @@ Or use the RocketRide VS Code extension to start a local server.
 cd backend
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # set ROCKETRIDE_URI, ROCKETRIDE_APIKEY, ROCKETRIDE_GEMINI_KEY
+cp .env.example .env   # ROCKETRIDE_APIKEY=MYAPIKEY, set ROCKETRIDE_GEMINI_KEY
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -70,7 +91,7 @@ cp .env.example .env   # VITE_API_URL=http://localhost:8000
 npm run dev
 ```
 
-Open **http://localhost:5173**, upload logs, click **Analyze**.
+Open **[http://localhost:5173](http://localhost:5173)**, upload logs, click **Analyze**.
 
 ### Tests
 
@@ -81,27 +102,50 @@ cd frontend && npm run build
 
 ---
 
+
+
 ## Docker Start (everything at once)
 
-Runs RocketRide engine, backend, and frontend together:
+Runs RocketRide engine, backend, and frontend together.
+
+**Before first run**, bootstrap the RocketRide data directory (same as manual setup):
 
 ```bash
+mkdir -p .data/rocketride && chmod 777 .data/rocketride
 cp .env.example .env
-# Edit .env — set ROCKETRIDE_APIKEY and ROCKETRIDE_GEMINI_KEY
+# Edit .env — set ROCKETRIDE_GEMINI_KEY (ROCKETRIDE_APIKEY defaults to MYAPIKEY)
+```
 
+If RocketRide has never started on this machine, run the helper script once so the engine can finish its first-time setup with network access:
+
+```bash
+./scripts/start-rocketride.sh
+# stop the standalone container if you only want compose:
+docker rm -f rocketride-engine
+```
+
+Then start the full stack:
+
+```bash
 docker compose up --build
 ```
 
-| Service    | URL                        |
-| ---------- | -------------------------- |
-| Frontend   | http://localhost:3000      |
-| Backend    | http://localhost:8000      |
-| API docs   | http://localhost:8000/docs |
-| RocketRide | http://localhost:5565      |
+Compose mounts `./.data/rocketride` into the RocketRide container (shared with the manual script). On a **fresh empty volume**, the engine needs outbound network/DNS on first boot to install dependencies — if `rocketride` keeps restarting with `Failed to install wheel`, run `./scripts/start-rocketride.sh` first, then `docker compose up`.
+
+
+| Service    | URL                                                      |
+| ---------- | -------------------------------------------------------- |
+| Frontend   | [http://localhost:3000](http://localhost:3000)           |
+| Backend    | [http://localhost:8000](http://localhost:8000)           |
+| API docs   | [http://localhost:8000/docs](http://localhost:8000/docs) |
+| RocketRide | [http://localhost:5565](http://localhost:5565)           |
+
 
 Stop: `docker compose down`
 
 ---
+
+
 
 ## API Reference
 
@@ -111,7 +155,7 @@ Base URL: `http://localhost:8000` (or your deployed backend)
 
 Liveness check.
 
-**Response `200`**
+**Response** `200`
 
 ```json
 { "status": "ok" }
@@ -119,21 +163,25 @@ Liveness check.
 
 ---
 
+
+
 ### `POST /analyze`
 
 Analyze uploaded Linux server logs.
 
 **Content-Type:** `multipart/form-data`
 
-| Field   | Type   | Required | Description                          |
-| ------- | ------ | -------- | ------------------------------------ |
-| `files` | file[] | yes      | One or more supported log files      |
+
+| Field   | Type   | Required | Description                     |
+| ------- | ------ | -------- | ------------------------------- |
+| `files` | file[] | yes      | One or more supported log files |
+
 
 **Supported filenames:** `journal.log`, `nginx-error.log`, `docker.log`, `pm2.log`, `free.txt`, `df.txt`, `systemctl.txt`
 
 **Limits (configurable via env):** 20 files max · 25 MB total · 120 s analysis timeout
 
-**Response `200`**
+**Response** `200`
 
 ```json
 {
@@ -156,15 +204,18 @@ Analyze uploaded Linux server logs.
 }
 ```
 
-| Field             | Type     | Description                                      |
-| ----------------- | -------- | ------------------------------------------------ |
-| `health_score`    | integer  | Overall health, 0–100                            |
-| `severity`        | string   | `Low` · `Medium` · `High` · `Critical`           |
-| `summary`         | string   | Overall assessment and likely root cause         |
-| `issues`          | array    | Detected problems with optional `evidence`         |
-| `recommendations` | string[] | Actionable fixes                                 |
+
+| Field             | Type     | Description                                |
+| ----------------- | -------- | ------------------------------------------ |
+| `health_score`    | integer  | Overall health, 0–100                      |
+| `severity`        | string   | `Low` · `Medium` · `High` · `Critical`     |
+| `summary`         | string   | Overall assessment and likely root cause   |
+| `issues`          | array    | Detected problems with optional `evidence` |
+| `recommendations` | string[] | Actionable fixes                           |
+
 
 **Errors**
+
 
 | Status | Meaning                                              |
 | ------ | ---------------------------------------------------- |
@@ -172,6 +223,7 @@ Analyze uploaded Linux server logs.
 | `502`  | RocketRide unreachable or LLM response parse failure |
 | `504`  | Analysis timed out                                   |
 | `500`  | Unexpected server error                              |
+
 
 **Example (curl)**
 
@@ -183,18 +235,3 @@ curl -X POST http://localhost:8000/analyze \
 
 ---
 
-## Project Layout
-
-```
-ServerPulse-AI/
-├── frontend/          # React + Vite + Tailwind
-├── backend/
-│   ├── app/           # FastAPI routes, services, models
-│   └── pipeline/      # serverpulse.pipe
-├── sample-logs/       # Demo log fixtures (optional)
-└── docker-compose.yml
-```
-
----
-
-Built with ❤️ [RocketRide](https://github.com/rocketride-org/rocketride-server).

@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     )
     pipeline_path: Path = Field(default=DEFAULT_PIPELINE_PATH)
     max_upload_bytes: int = Field(default=26_214_400, alias="MAX_UPLOAD_BYTES")
-    max_files: int = Field(default=20, alias="MAX_FILES")
+    max_files: int = Field(default=30, alias="MAX_FILES")
     analysis_timeout_seconds: int = Field(
         default=120,
         alias="ANALYSIS_TIMEOUT_SECONDS",

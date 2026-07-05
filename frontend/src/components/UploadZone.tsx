@@ -1,6 +1,6 @@
 import { useRef, useState, type DragEvent } from 'react'
 
-import { SUPPORTED_LOG_FILES } from '../api/client'
+import { SUPPORTED_FILE_ACCEPT, SUPPORTED_LOG_FILES } from '../api/client'
 import { FileList } from './FileList'
 
 interface UploadZoneProps {
@@ -9,7 +9,7 @@ interface UploadZoneProps {
   onFilesChange: (files: File[]) => void
 }
 
-const ACCEPT = SUPPORTED_LOG_FILES.map((name) => `.${name.split('.').pop()}`).join(',')
+const ACCEPT = SUPPORTED_FILE_ACCEPT
 
 function isSupportedFile(file: File): boolean {
   const name = file.name.toLowerCase().split('/').pop() ?? ''

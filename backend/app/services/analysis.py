@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from rocketride import RocketRideClient
+from rocketride.core.exceptions import AuthenticationException
 from rocketride.schema import Question
 
 from app.prompts.log_analysis import ANALYSIS_SYSTEM_PROMPT, ANALYSIS_USER_QUESTION
@@ -58,10 +59,10 @@ async def run_analysis(
 
 async def _execute_pipeline(log_prompt: str, pipeline_path: Path) -> AnalysisResponse:
     client = RocketRideClient()
+    token: str | None = None
     try:
         await client.connect()
-        result = await client.use(filepath=str(pipeline_path))
-        token = result["token"]
+        token = await _start_pipeline(client, pipeline_path)
         logger.info("RocketRide pipeline started", extra={"token_prefix": token[:8]})
 
         question = _build_question(log_prompt)
@@ -69,16 +70,55 @@ async def _execute_pipeline(log_prompt: str, pipeline_path: Path) -> AnalysisRes
         raw_answer = extract_answer(response)
 
         return parse_analysis_response(raw_answer)
+    except AuthenticationException as exc:
+        message = getattr(exc, "message", None) or str(exc)
+        logger.warning("RocketRide authentication failed: %s", message)
+        raise RocketRideUnavailableError(
+            "RocketRide authentication failed. Set ROCKETRIDE_APIKEY in backend/.env "
+            "(local Docker engine default: MYAPIKEY)."
+        ) from exc
     except (ParseError, AnalysisServiceError):
         raise
     except Exception as exc:
         logger.exception("RocketRide analysis failed")
-        raise RocketRideUnavailableError("RocketRide analysis failed.") from exc
+        raise RocketRideUnavailableError(
+            f"RocketRide analysis failed: {exc}"
+        ) from exc
     finally:
+        if token:
+            try:
+                await client.terminate(token)
+            except Exception:
+                logger.warning(
+                    "Failed to terminate RocketRide pipeline",
+                    exc_info=True,
+                )
         try:
             await client.disconnect()
         except Exception:
             logger.warning("Failed to disconnect RocketRide client", exc_info=True)
+
+
+async def _start_pipeline(client: RocketRideClient, pipeline_path: Path) -> str:
+    """
+    Start the analysis pipeline, reusing an existing run if the engine reports one.
+
+    RocketRide allows only one active pipeline per project/source. A prior request
+    that did not call terminate() can leave the pipeline running; use_existing
+    recovers from that state.
+    """
+    try:
+        result = await client.use(filepath=str(pipeline_path))
+    except RuntimeError as exc:
+        if "already running" not in str(exc).lower():
+            raise
+        logger.info("RocketRide pipeline already running; reusing existing instance")
+        result = await client.use(filepath=str(pipeline_path), use_existing=True)
+
+    task_token = result.get("token", "")
+    if not task_token:
+        raise RocketRideUnavailableError("RocketRide did not return a pipeline token.")
+    return task_token
 
 
 def _build_question(log_prompt: str) -> Question:

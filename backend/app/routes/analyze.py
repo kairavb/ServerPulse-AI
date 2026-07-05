@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
@@ -13,7 +14,12 @@ from app.services.analysis import (
     RocketRideUnavailableError,
     run_analysis,
 )
-from app.services.ingest import IngestError, build_analysis_prompt, read_uploaded_logs
+from app.services.ingest import (
+    IngestError,
+    build_analysis_prompt,
+    format_uploaded_log_labels,
+    read_uploaded_logs,
+)
 from app.services.llm_parser import ParseError
 
 logger = logging.getLogger(__name__)
@@ -32,6 +38,15 @@ async def analyze_logs(
     Supported filenames: journal.log, nginx-error.log, docker.log, pm2.log,
     free.txt, df.txt, systemctl.txt.
     """
+    if not settings.rocketride_apikey.strip():
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "ROCKETRIDE_APIKEY is not set in backend/.env. "
+                "For the local RocketRide Docker engine, use: ROCKETRIDE_APIKEY=MYAPIKEY"
+            ),
+        )
+
     try:
         logs = await read_uploaded_logs(
             files,
@@ -39,10 +54,16 @@ async def analyze_logs(
             max_total_bytes=settings.max_upload_bytes,
         )
         prompt = build_analysis_prompt(logs)
-        return await run_analysis(
+        result = await run_analysis(
             prompt,
             pipeline_path=settings.pipeline_path,
             timeout_seconds=settings.analysis_timeout_seconds,
+        )
+        return result.model_copy(
+            update={
+                "uploaded_logs": format_uploaded_log_labels(logs),
+                "generated_at": datetime.now(timezone.utc),
+            }
         )
     except IngestError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -54,10 +75,7 @@ async def analyze_logs(
         ) from exc
     except (RocketRideUnavailableError, ParseError) as exc:
         logger.warning("Analysis failed: %s", exc)
-        raise HTTPException(
-            status_code=502,
-            detail="Analysis service unavailable. Please try again later.",
-        ) from exc
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
     except Exception:
         logger.exception("Unexpected error during analysis")
         raise HTTPException(

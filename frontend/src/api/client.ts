@@ -5,12 +5,28 @@ const API_BASE = import.meta.env.VITE_API_URL ?? ''
 export const SUPPORTED_LOG_FILES = [
   'journal.log',
   'nginx-error.log',
+  'nginx-access.log',
   'docker.log',
   'pm2.log',
+  'syslog.log',
+  'auth.log',
+  'kern.log',
+  'ufw.log',
   'free.txt',
   'df.txt',
   'systemctl.txt',
+  'top.txt',
+  'ss.txt',
+  'uptime.txt',
+  'iostat.txt',
+  'nginx.conf',
+  'docker-compose.yml',
+  'ecosystem.config.js',
+  'pm2.config.json',
 ] as const
+
+export const SUPPORTED_FILE_ACCEPT =
+  '.log,.txt,.conf,.yml,.js,.json'
 
 export class ApiError extends Error {
   status: number
@@ -49,8 +65,8 @@ function mapErrorMessage(status: number, detail: string): string {
   if (status === 400) {
     return detail || 'Invalid upload. Check your files and try again.'
   }
-  if (status === 502 || status === 504) {
-    return 'Analysis service unavailable. Try again.'
+  if (status === 502 || status === 504 || status === 503) {
+    return detail || 'Analysis service unavailable. Try again.'
   }
   if (status === 500) {
     return 'An unexpected error occurred. Please try again.'

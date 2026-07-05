@@ -1,20 +1,97 @@
 import type { AnalysisResponse } from '../types/analysis'
+import { formatGeneratedAt } from './formatDate'
+import { buildIncidentReportFilename } from './reportFilename'
 
-/** Build a downloadable Markdown incident report from the API response. */
+function appendTimeline(lines: string[], report: AnalysisResponse): void {
+  lines.push('## Incident Timeline', '')
+  if (report.timeline.length === 0) {
+    lines.push('_No chronological events could be established._', '')
+  } else {
+    for (const event of report.timeline) {
+      const source = event.source ? ` (${event.source})` : ''
+      lines.push(`- **${event.time}** — ${event.title}${source}`)
+      if (event.detail) {
+        lines.push(`  - ${event.detail}`)
+      }
+    }
+    lines.push('')
+  }
+  if (report.timeline_summary) {
+    lines.push(`**Overall:** ${report.timeline_summary}`, '')
+  }
+}
+
+function appendRecommendations(lines: string[], report: AnalysisResponse): void {
+  lines.push('## Recommendations', '')
+  if (report.recommendations.length === 0) {
+    lines.push('_No recommendations provided._', '')
+    return
+  }
+  for (const item of report.recommendations) {
+    lines.push(`- ${item.action}`)
+    if (item.command) {
+      lines.push('  ```bash')
+      lines.push(`  ${item.command}`)
+      lines.push('  ```')
+    }
+  }
+  lines.push('')
+}
+
+/** Build a downloadable Markdown health report from the API response. */
 export function buildMarkdownReport(report: AnalysisResponse): string {
+  const generatedLabel = formatGeneratedAt(report.generated_at)
+
   const lines = [
-    '# ServerPulse AI — Incident Report',
+    '# ServerPulse AI — Health Report',
     '',
+    `**Generated At:** ${generatedLabel}`,
     `**Health Score:** ${report.health_score} / 100`,
     `**Severity:** ${report.severity}`,
-    '',
-    '## Summary',
-    '',
-    report.summary,
-    '',
-    '## Detected Issues',
-    '',
+    `**Confidence:** ${report.confidence}`,
   ]
+
+  if (report.confidence_reason) {
+    lines.push(`**Confidence Reason:** ${report.confidence_reason}`)
+  }
+
+  lines.push('')
+
+  if (report.risk_scores) {
+    lines.push(
+      '## Risk Scores',
+      '',
+      `| Dimension | Risk % |`,
+      `| --- | --- |`,
+      `| Availability | ${report.risk_scores.availability} |`,
+      `| Security | ${report.risk_scores.security} |`,
+      `| Storage | ${report.risk_scores.storage} |`,
+      `| Memory | ${report.risk_scores.memory} |`,
+      `| Networking | ${report.risk_scores.networking} |`,
+      '',
+    )
+  }
+
+  if (report.uploaded_logs.length > 0) {
+    lines.push('## Logs Analyzed', '')
+    for (const log of report.uploaded_logs) {
+      lines.push(`- ${log}`)
+    }
+    lines.push('')
+  }
+
+  lines.push('## Summary', '', report.summary, '')
+
+  if (report.impact) {
+    lines.push('## Impact', '', report.impact, '')
+  }
+  if (report.root_cause) {
+    lines.push('## Root Cause', '', report.root_cause, '')
+  }
+
+  appendTimeline(lines, report)
+
+  lines.push('## Detected Issues', '')
 
   if (report.issues.length === 0) {
     lines.push('_No issues detected._', '')
@@ -35,12 +112,12 @@ export function buildMarkdownReport(report: AnalysisResponse): string {
     }
   }
 
-  lines.push('## Recommendations', '')
-  if (report.recommendations.length === 0) {
-    lines.push('_No recommendations provided._', '')
-  } else {
-    for (const item of report.recommendations) {
-      lines.push(`- ${item}`)
+  appendRecommendations(lines, report)
+
+  if (report.suggested_logs.length > 0) {
+    lines.push('## Suggested Additional Logs', '')
+    for (const log of report.suggested_logs) {
+      lines.push(`- ${log}`)
     }
     lines.push('')
   }
@@ -55,7 +132,7 @@ export function downloadMarkdownReport(report: AnalysisResponse): void {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = `serverpulse-report-${new Date().toISOString().slice(0, 10)}.md`
+  link.download = buildIncidentReportFilename(report.generated_at, 'md')
   link.click()
   URL.revokeObjectURL(url)
 }

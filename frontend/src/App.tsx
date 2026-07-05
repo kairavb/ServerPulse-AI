@@ -1,18 +1,31 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { analyzeLogs, ApiError } from './api/client'
 import { ErrorBanner } from './components/ErrorBanner'
 import { Header } from './components/Header'
 import { LoadingSpinner } from './components/LoadingSpinner'
 import { ReportDashboard } from './components/ReportDashboard'
+import { ReportHistory } from './components/ReportHistory'
 import { UploadZone } from './components/UploadZone'
-import type { AnalysisResponse } from './types/analysis'
+import type { AnalysisResponse, HistoryEntry } from './types/analysis'
+import { normalizeReport } from './utils/normalizeReport'
+import {
+  clearReportHistory,
+  deleteHistoryEntry,
+  loadReportHistory,
+  saveReportToHistory,
+} from './utils/reportHistory'
 
 export default function App() {
   const [files, setFiles] = useState<File[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [report, setReport] = useState<AnalysisResponse | null>(null)
+  const [history, setHistory] = useState<HistoryEntry[]>([])
+
+  useEffect(() => {
+    setHistory(loadReportHistory())
+  }, [])
 
   const handleAnalyze = async () => {
     if (files.length === 0) {
@@ -26,7 +39,9 @@ export default function App() {
 
     try {
       const result = await analyzeLogs(files)
-      setReport(result)
+      const normalized = normalizeReport(result)
+      setReport(normalized)
+      setHistory(saveReportToHistory(normalized))
     } catch (err) {
       const message =
         err instanceof ApiError ? err.message : 'Something went wrong. Please try again.'
@@ -40,6 +55,12 @@ export default function App() {
     setReport(null)
     setFiles([])
     setError(null)
+  }
+
+  const handleSelectHistory = (entry: HistoryEntry) => {
+    setReport(normalizeReport(entry.report))
+    setError(null)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
@@ -72,6 +93,16 @@ export default function App() {
           {report && !loading && (
             <ReportDashboard report={report} onAnalyzeAgain={handleAnalyzeAgain} />
           )}
+
+          <ReportHistory
+            entries={history}
+            onSelect={handleSelectHistory}
+            onDelete={(id) => setHistory(deleteHistoryEntry(id))}
+            onClear={() => {
+              clearReportHistory()
+              setHistory([])
+            }}
+          />
         </div>
       </main>
 
