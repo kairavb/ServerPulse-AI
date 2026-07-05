@@ -1,0 +1,7 @@
+2026-07-03T18:44:08 PM2 log: App [backend:0] exited with code [1]
+
+2026-07-03T18:44:12 PM2 log: App [backend:0] starting
+
+2026-07-03T18:44:13 PM2 error: Error: ENOSPC: no space left on device
+
+2026-07-03T18:44:18 PM2 log: App [backend:0] exited with code [1]

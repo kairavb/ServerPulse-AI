@@ -1,0 +1,7 @@
+2026-07-03T14:28:53 PM2 log: App [backend:0] exited with code [137] via signal [SIGKILL]
+
+2026-07-03T14:28:57 PM2 log: App [backend:0] starting in fork mode
+
+2026-07-03T14:29:01 PM2 log: App [backend:0] online
+
+2026-07-03T14:29:15 PM2 log: App [backend:0] exited with code [137]

@@ -1,0 +1,7 @@
+2026-07-03T09:00:02Z container postgres started
+2026-07-03T09:00:03Z container redis started
+2026-07-03T09:00:04Z container backend started
+2026-07-03T09:10:15Z healthcheck passed
+2026-07-03T09:20:15Z healthcheck passed
+2026-07-03T09:30:15Z healthcheck passed
+2026-07-03T09:40:15Z healthcheck passed

@@ -1,0 +1,5 @@
+2026/07/03 14:29:04 [error] 1354#1354: *183 connect() failed (111: Connection refused) while connecting to upstream, client: 192.168.1.44, server: api.example.com, request: "GET /api/users HTTP/1.1", upstream: "http://127.0.0.1:3000/api/users"
+
+2026/07/03 14:29:05 [error] 1354#1354: *184 upstream prematurely closed connection while reading response header from upstream, client: 192.168.1.50, server: api.example.com
+
+2026/07/03 14:29:08 [error] 1354#1354: *185 connect() failed (111: Connection refused) while connecting to upstream

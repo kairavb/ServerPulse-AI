@@ -1,0 +1,8 @@
+Jul 03 09:00:01 server systemd[1]: Started backend.service.
+Jul 03 09:00:02 server systemd[1]: Started nginx.service.
+Jul 03 09:00:03 server systemd[1]: Started docker.service.
+Jul 03 09:00:04 server systemd[1]: Started pm2-root.service.
+Jul 03 09:10:15 server backend[1943]: INFO Server started successfully on port 3000.
+Jul 03 09:15:22 server CRON[2120]: (root) CMD (run-parts /etc/cron.hourly)
+Jul 03 09:20:43 server backend[1943]: INFO Health check completed successfully.
+Jul 03 09:30:11 server systemd[1]: Session 52 of user root logged out.

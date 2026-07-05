@@ -1,0 +1,11 @@
+UNIT                     LOAD   ACTIVE SUB     DESCRIPTION
+
+nginx.service            loaded active running A high performance web server
+
+docker.service           loaded active running Docker Application Container Engine
+
+backend.service          loaded failed failed  Node.js Backend API
+
+pm2-root.service         loaded active running PM2 Process Manager
+
+ssh.service              loaded active running OpenSSH Server

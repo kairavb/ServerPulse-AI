@@ -1,0 +1,7 @@
+Filesystem      Size  Used Avail Use% Mounted on
+
+/dev/vda1        40G   14G   24G   37% /
+
+tmpfs           3.8G     0  3.8G    0% /dev/shm
+
+/dev/vdb        100G   38G   62G   38% /var/lib/docker

@@ -1,0 +1,7 @@
+Jul 03 18:41:12 server systemd[1]: Started backend.service.
+Jul 03 18:43:56 server kernel: EXT4-fs warning (device vda1): ext4_dx_add_entry: Directory index full
+Jul 03 18:44:08 server backend[2194]: ERROR: failed to write cache file: No space left on device
+Jul 03 18:44:10 server systemd[1]: backend.service: Main process exited, status=1/FAILURE
+Jul 03 18:44:11 server systemd[1]: backend.service: Scheduled restart job.
+Jul 03 18:44:12 server systemd[1]: Started backend.service.
+Jul 03 18:44:18 server backend[2218]: ERROR: unable to create temporary file: No space left on device

@@ -1,0 +1,8 @@
+Jul 03 14:12:15 server systemd[1]: Started PM2 process manager.
+Jul 03 14:14:01 server pm2[1423]: App [backend:0] online
+Jul 03 14:28:55 server kernel: Out of memory: Killed process 24581 (node) total-vm:1867328kB anon-rss:1432276kB
+Jul 03 14:28:56 server systemd[1]: backend.service: Main process exited, code=killed, status=9/KILL
+Jul 03 14:28:56 server systemd[1]: backend.service: Failed with result 'signal'.
+Jul 03 14:28:57 server systemd[1]: backend.service: Scheduled restart job.
+Jul 03 14:28:58 server systemd[1]: Started backend.service.
+Jul 03 14:29:02 server pm2[1423]: App [backend:0] online

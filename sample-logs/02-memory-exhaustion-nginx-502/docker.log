@@ -1,0 +1,5 @@
+2026-07-03T14:20:41Z container postgres started
+2026-07-03T14:28:56Z backend container exited with code 137
+2026-07-03T14:29:02Z restarting container backend
+2026-07-03T14:29:08Z healthcheck failed
+2026-07-03T14:29:12Z restarting container backend
