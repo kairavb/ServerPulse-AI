@@ -11,7 +11,7 @@ from rocketride import RocketRideClient
 from rocketride.core.exceptions import AuthenticationException
 from rocketride.schema import Question
 
-from app.prompts.log_analysis import ANALYSIS_SYSTEM_PROMPT, ANALYSIS_USER_QUESTION
+from app.prompts.log_analysis import ANALYSIS_USER_QUESTION
 from app.models.analysis import AnalysisResponse
 from app.services.llm_parser import ParseError, parse_analysis_response
 
@@ -122,8 +122,8 @@ async def _start_pipeline(client: RocketRideClient, pipeline_path: Path) -> str:
 
 
 def _build_question(log_prompt: str) -> Question:
+    """Send logs as context; stage prompts are configured in serverpulse.pipe."""
     question = Question(expectJson=True)
-    question.addInstruction("Role", ANALYSIS_SYSTEM_PROMPT)
     question.addContext(log_prompt)
     question.addQuestion(ANALYSIS_USER_QUESTION)
     return question

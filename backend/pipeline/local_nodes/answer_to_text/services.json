@@ -1,0 +1,23 @@
+{
+	"title": "Pass Stage Output",
+	"protocol": "answer_to_text://",
+	"classType": ["text"],
+	"register": "filter",
+	"node": "python",
+	"path": "local_nodes.answer_to_text",
+	"prefix": "answer_to_text",
+	"description": [
+		"Passes each stage's LLM JSON output to the text lane for the next analysis step."
+	],
+	"lanes": {
+		"answers": ["text"]
+	},
+	"preconfig": {
+		"default": "default",
+		"profiles": {
+			"default": {}
+		}
+	},
+	"fields": {},
+	"shape": []
+}

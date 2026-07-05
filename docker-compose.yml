@@ -6,6 +6,13 @@ services:
     volumes:
       # Reuse the same bootstrap data as ./scripts/start-rocketride.sh
       - ./.data/rocketride:/opt/data
+      # Local lane bridge node (answers → text) for multi-stage LLM chaining
+      - ./backend/pipeline:/pipeline:ro
+    entrypoint:
+      - ./engine
+      - --node_path=/pipeline
+      - ./ai/eaas.py
+      - --host=0.0.0.0
     dns:
       - 8.8.8.8
       - 1.1.1.1

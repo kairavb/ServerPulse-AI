@@ -20,13 +20,16 @@ FastAPI  →  bundle logs into a labeled prompt
          →  parse structured JSON  →  API response
 ```
 
-**Pipeline** (`backend/pipeline/serverpulse.pipe`):
+**Pipeline** (`backend/pipeline/serverpulse.pipe`) — five named stages in a linear chain:
 
 ```
-chat → llm_gemini (gemini-2.5-flash) → response_answers
+Upload Logs → Categorize Logs → Extract Issues → Correlate Findings
+            → Generate Recommendations → Format Incident Report → Return Report
 ```
 
-The system prompt in `backend/app/prompts/log_analysis.py` instructs the model to analyze failures, security, performance, storage, and networking issues — evidence only, no hallucination.
+Each stage is a `prompt` + `llm_gemini` pair; `Pass Stage Output` nodes bridge structured JSON between steps. Node IDs match these names in the RocketRide canvas (open the `.pipe` file in VS Code with the RocketRide extension).
+
+The backend sends logs as chat context with a short user question; it does not orchestrate stages itself.
 
 RocketRide credentials (`ROCKETRIDE_URI`, `ROCKETRIDE_APIKEY`) and the Gemini key (`ROCKETRIDE_GEMINI_KEY`) stay on the server.
 
@@ -65,7 +68,10 @@ mkdir -p .data/rocketride && chmod 777 .data/rocketride
 docker rm -f rocketride-engine
 docker run -d --name rocketride-engine -p 5565:5565 \
   -v "$(pwd)/.data/rocketride:/opt/data" \
-  ghcr.io/rocketride-org/rocketride-engine:latest
+  -v "$(pwd)/backend/pipeline:/pipeline:ro" \
+  --entrypoint ./engine \
+  ghcr.io/rocketride-org/rocketride-engine:latest \
+  --node_path=/pipeline ./ai/eaas.py --host=0.0.0.0
 ```
 
 Set `ROCKETRIDE_APIKEY=MYAPIKEY` in `backend/.env` (default dev key for the local engine).
