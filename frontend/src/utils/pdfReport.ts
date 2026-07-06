@@ -97,7 +97,7 @@ export function downloadPdfReport(report: AnalysisResponse): void {
   y = ensureSpace(doc, y + 8, LINE_HEIGHT)
   doc.setFontSize(8)
   doc.setTextColor(120)
-  doc.text(`Generated ${formatGeneratedAt(report.generated_at)} · ServerPulse AI`, MARGIN, y + 4)
+  doc.text(`Generated ${formatGeneratedAt(report.generated_at)} · Server Pulse`, MARGIN, y + 4)
   doc.setTextColor(0)
 
   doc.save(buildIncidentReportFilename(report.generated_at, 'pdf'))

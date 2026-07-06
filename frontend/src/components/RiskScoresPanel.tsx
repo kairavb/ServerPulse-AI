@@ -16,9 +16,40 @@ function barColor(score: number): string {
 
 interface RiskScoresPanelProps {
   scores: RiskScores
+  compact?: boolean
 }
 
-export function RiskScoresPanel({ scores }: RiskScoresPanelProps) {
+export function RiskScoresPanel({ scores, compact = false }: RiskScoresPanelProps) {
+  if (compact) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Risk scores
+        </p>
+        <p className="mt-0.5 text-[11px] text-slate-400">Higher = greater risk</p>
+        <div className="mt-3 space-y-2.5">
+          {DIMENSIONS.map(({ key, label }) => {
+            const value = scores[key]
+            return (
+              <div key={key}>
+                <div className="mb-0.5 flex items-center justify-between text-xs">
+                  <span className="font-medium text-slate-600">{label}</span>
+                  <span className="font-mono font-semibold text-slate-800">{value}%</span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                  <div
+                    className={`h-full rounded-full ${barColor(value)}`}
+                    style={{ width: `${value}%` }}
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <h2 className="text-lg font-semibold text-slate-900">Risk Scores</h2>

@@ -1,4 +1,4 @@
-# ServerPulse AI
+# Server Pulse
 
 AI-powered Linux server health analyzer. Upload diagnostic logs, run them through a **RocketRide** pipeline with **Gemini**, and get a structured incident report with health score, severity, issues, and recommendations.
 
@@ -8,7 +8,7 @@ AI-powered Linux server health analyzer. Upload diagnostic logs, run them throug
 
 ## How RocketRide Is Used
 
-ServerPulse does **not** call Gemini directly from the browser. The FastAPI backend owns the RocketRide integration:
+Server Pulse does **not** call Gemini directly from the browser. The FastAPI backend owns the RocketRide integration:
 
 ```
 Browser  →  POST /analyze (log files)

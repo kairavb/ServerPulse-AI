@@ -1,4 +1,4 @@
-"""ServerPulse AI — FastAPI backend."""
+"""Server Pulse — FastAPI backend."""
 
 import logging
 
@@ -16,7 +16,7 @@ logging.basicConfig(
 settings = get_settings()
 
 app = FastAPI(
-    title="ServerPulse AI",
+    title="Server Pulse",
     description="AI-powered Linux server health analyzer powered by RocketRide.",
     version="0.1.0",
 )
